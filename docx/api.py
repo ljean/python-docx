@@ -16,6 +16,7 @@ from docx.package import Package
 from docx.parts.numbering import NumberingPart
 from docx.parts.styles import StylesPart
 from docx.shared import lazyproperty
+from docx.shape import InlineShape
 
 
 _thisdir = os.path.split(__file__)[0]
@@ -71,6 +72,27 @@ class Document(object):
         if style is not None:
             p.style = style
         return p
+    
+    def _scale_picture(self, picture, width=None, height=None):
+        # scale picture dimensions if width and/or height provided
+        if width is not None or height is not None:
+            native_width, native_height = picture.width, picture.height
+            if width is None:
+                scaling_factor = float(height) / float(native_height)
+                width = int(round(native_width * scaling_factor))
+            elif height is None:
+                scaling_factor = float(width) / float(native_width)
+                height = int(round(native_height * scaling_factor))
+            # set picture to scaled dimensions
+            picture.width = width
+            picture.height = height
+    
+    def add_picture_to_run(self, run, image_path_or_stream, width=None, height=None):
+        image_part, r_id = self.inline_shapes.part.get_or_add_image_part(image_path_or_stream)
+        shape_id = self.inline_shapes.part.next_id
+        picture = InlineShape.new_picture(run._r, image_part, r_id, shape_id)
+        self._scale_picture(picture, width, height)
+        return picture
 
     def add_picture(self, image_path_or_stream, width=None, height=None):
         """
@@ -84,19 +106,8 @@ class Document(object):
         value is specified, as is often the case.
         """
         picture = self.inline_shapes.add_picture(image_path_or_stream)
-
-        # scale picture dimensions if width and/or height provided
-        if width is not None or height is not None:
-            native_width, native_height = picture.width, picture.height
-            if width is None:
-                scaling_factor = float(height) / float(native_height)
-                width = int(round(native_width * scaling_factor))
-            elif height is None:
-                scaling_factor = float(width) / float(native_width)
-                height = int(round(native_height * scaling_factor))
-            # set picture to scaled dimensions
-            picture.width = width
-            picture.height = height
+        
+        self._scale_picture(picture, width, height)
 
         return picture
 
