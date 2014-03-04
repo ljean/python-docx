@@ -210,7 +210,7 @@ class ImagePart(Part):
         horizontal dots per inch (dpi).
         """
         px_width = self.image.px_width
-        horz_dpi = self.image.horz_dpi
+        horz_dpi = self.image.horz_dpi or 150 #LJ
         width_in_inches = px_width / horz_dpi
         return Inches(width_in_inches)
 
@@ -221,7 +221,7 @@ class ImagePart(Part):
         vertical dots per inch (dpi).
         """
         px_height = self.image.px_height
-        horz_dpi = self.image.horz_dpi
+        horz_dpi = self.image.horz_dpi or 150 #LJ
         height_in_emu = 914400 * px_height / horz_dpi
         return Emu(height_in_emu)
 
